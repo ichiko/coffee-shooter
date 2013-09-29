@@ -8,10 +8,10 @@ IMG_ENEMY    = 'images/enemy.png'
 IMG_MUSHROOM = 'images/mushroom.png'
 
 player = null
-px = 0
+
 e_time = 70
 e_pop_x = 300
-pop_top = 30
+pop_top = 50
 score = 0
 time_limit = 300
 
@@ -23,24 +23,41 @@ class Shooter extends Game
 		@preload IMG_PLAYER, IMG_ENEMY, IMG_MUSHROOM
 
 		@onload = ->
-			player = new Player(40, 0)
-			@rootScene.addChild player
-
-			@rootScene.onenter = ->
-				@frame = 0
-
-			@rootScene.ontouchstart = (e) ->
-				player.x = e.x
-				this.addChild new Mush(e.x, pop_top)
-
-			@onenterframe = ->
-				if @frame % 14 == 0
-					@rootScene.addChild(new Enemy(e_pop_x, pop_top + Math.random() * 200))
-				if @frame >= time_limit
-					alert score + "点です"
-					@end()
+			@replaceScene(new ShootScene())
 
 		@start()
+
+## ---- メインのゲームシーン ----
+
+class ShootScene extends Scene
+	constructor: ->
+		super()		# ... うっかりするけど、これ大事
+		@game = Shooter.game
+
+		player = new Player(40, 0)
+		@addChild player
+
+		# @frameは他のシーンとも共有されるのか、カウントアップが激速
+		@tick = 0
+
+		@onenter = ->
+			console.log "ShootScene.onenter"
+			@tick = 0
+			score = 0
+
+		@ontouchstart = (e) ->
+			player.x = e.x
+			@addChild new Mush(e.x, pop_top)
+
+		@onenterframe = ->
+			console.log "ShootScene.onenterframe"
+			@tick++
+			if @tick % 14 == 0
+				@addChild(new Enemy(e_pop_x, pop_top + Math.random() * 200))
+
+			# ゲームオーバー
+			if @tick >= time_limit
+				@game.pushScene new ResultScene(score)
 
 class Player extends Sprite
 	constructor: (x, y) ->
@@ -90,6 +107,33 @@ class Mush extends Sprite
 				break
 			i++
 
+## ---- 結果画面 ----
+
+class ResultScene extends Scene
+	constructor: (score) ->
+		super()
+		@game = Shooter.game
+
+		label1 = new Label()
+		label1.text = "結果"
+		label1.x = 60
+		label1.y = 100
+		label1.width = 200
+		label1.textAlign = 'center'
+		@addChild label1
+
+		label2 = new Label()
+		label2.text = "スコア：" + score
+		label2.x = 60
+		label2.y = 160
+		label2.width = 200
+		label2.textAlign = 'center'
+		@addChild label2
+
+		@ontouchstart = ->
+			console.log "ResultScene ontouchstart"
+			@game.popScene()
+			console.log "popped"
 
 window.onload = ->
 	new Shooter()
