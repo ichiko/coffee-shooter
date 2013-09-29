@@ -7,25 +7,66 @@ IMG_PLAYER   = 'images/player.png'
 IMG_ENEMY    = 'images/enemy.png'
 IMG_MUSHROOM = 'images/mushroom.png'
 
-player = null
+# 状態定義
+STATE_MAINGAME = 1
+STATE_RESULT = 2
 
-e_time = 70
-e_pop_x = 300
-pop_top = 50
-score = 0
-time_limit = 300
+SCREEN_SIZE = 320
+FPS = 30
+
+PLAYER_INIT_POS_X = 40
+PLAYER_INIT_POS_Y = 30
+ENEMY_POP_DELAY = 15
+ENEMY_INIT_POS_X = 300
+ENEMY_INIT_POS_TOP = 120
+ENEMY_INIT_POS_RANGE = 180
+MUSH_INIT_POS_Y = 55
+
+TIME_LIMIT = 10 * FPS
+
+# グローバル変数
+player = null
 
 class Shooter extends Game
 	constructor: ->
-		super 320, 320
-		@fps = 30
+		super SCREEN_SIZE, SCREEN_SIZE
+		@fps = FPS
 		Shooter.game = @
 		@preload IMG_PLAYER, IMG_ENEMY, IMG_MUSHROOM
+		@time_tick = 0
 
 		@onload = ->
-			@replaceScene(new ShootScene())
+			@replaceScene new ShootScene()
+			@startGame()
+
+			@onenterframe = ->
+				@time_tick++
+				switch @state
+					when STATE_MAINGAME
+						@onEnterFrameAtGame()
 
 		@start()
+
+	# メインゲームの開始
+	startGame: ->
+		@time_tick = 0
+		@score = 0
+		@state = STATE_MAINGAME
+
+	# メインゲームの終了
+	finishGame: ->
+		@state = STATE_RESULT
+		@currentScene.onFinishGame()
+		@pushScene new ResultScene(@score)
+
+	# 状態ごとのonEnterFrame
+	onEnterFrameAtGame: ->
+		if @time_tick >= TIME_LIMIT
+			@finishGame()
+
+	# スコア加算
+	incrementScore: (add) ->
+		@score += add
 
 ## ---- メインのゲームシーン ----
 
@@ -33,31 +74,66 @@ class ShootScene extends Scene
 	constructor: ->
 		super()		# ... うっかりするけど、これ大事
 		@game = Shooter.game
+		ShootScene.scene = @
 
-		player = new Player(40, 0)
+		player = new Player(PLAYER_INIT_POS_X, PLAYER_INIT_POS_Y)
 		@addChild player
+
+		timeLabel = new StateLabel(160, 18)
+		timeLabel.x = timeLabel.y = 0
+		timeLabel.setText("残り時間 : " + parseInt(TIME_LIMIT / Shooter.game.fps))
+		timeLabel.onenterframe = ->
+			time = parseInt((TIME_LIMIT - ShootScene.scene.tick) / Shooter.game.fps) + 1
+			timeLabel.setText("残り時間 : " + time)
+		@timeLabel = timeLabel
+		@addChild @timeLabel
 
 		# @frameは他のシーンとも共有されるのか、カウントアップが激速
 		@tick = 0
 
 		@onenter = ->
-			console.log "ShootScene.onenter"
+			@initScene()
 			@tick = 0
-			score = 0
 
 		@ontouchstart = (e) ->
 			player.x = e.x
-			@addChild new Mush(e.x, pop_top)
+			@mainGroup.addChild new Mush(e.x, MUSH_INIT_POS_Y)
 
 		@onenterframe = ->
-			console.log "ShootScene.onenterframe"
 			@tick++
-			if @tick % 14 == 0
-				@addChild(new Enemy(e_pop_x, pop_top + Math.random() * 200))
+			if @tick % ENEMY_POP_DELAY == 0
+				@mainGroup.addChild(new Enemy(ENEMY_INIT_POS_X, ENEMY_INIT_POS_TOP + Math.random() * ENEMY_INIT_POS_RANGE))
 
-			# ゲームオーバー
-			if @tick >= time_limit
-				@game.pushScene new ResultScene(score)
+	initScene: ->
+		player.x = PLAYER_INIT_POS_X
+		@removeChild @mainGroup if @mainGroup
+		@mainGroup = new Group()
+		@addChild @mainGroup
+
+	onFinishGame: ->
+		@timeLabel.setText "残り時間 : 0"
+
+class StateLabel extends Group
+	constructor: (width, height, color) ->
+		super()
+	
+		StateLabelPadding = 3
+
+		backboard = new Sprite(width + StateLabelPadding * 2, height + StateLabelPadding * 2)
+		backboard.backgroundColor = '#666666'
+		backboard.x = backboard.y = 0
+		@addChild backboard
+
+		@label = new Label()
+		@label.color = (color || 'white')
+		@label.width = width
+		@label.height = height
+		@label.x = StateLabelPadding
+		@label.y = StateLabelPadding
+		@addChild @label
+
+	setText: (text) ->
+		@label.text = text
 
 class Player extends Sprite
 	constructor: (x, y) ->
@@ -101,7 +177,7 @@ class Mush extends Sprite
 		while i < len
 			elm = @parentNode.childNodes[i]
 			if elm isnt player and elm isnt this and elm.intersect(this) is true
-				score += 100
+				@game.incrementScore(100)
 				@parentNode.removeChild elm
 				@parentNode.removeChild this
 				break
@@ -113,6 +189,12 @@ class ResultScene extends Scene
 	constructor: (score) ->
 		super()
 		@game = Shooter.game
+
+		backboard = new Sprite(200, 220)
+		backboard.backgroundColor = 'lightgray'
+		backboard.x = 60
+		backboard.y = 50
+		@addChild backboard
 
 		label1 = new Label()
 		label1.text = "結果"
@@ -130,10 +212,13 @@ class ResultScene extends Scene
 		label2.textAlign = 'center'
 		@addChild label2
 
+		# 結果表示直後は、タッチイベントを受け付けない
+		@tl.delay(@game.fps * 1).then(this.setEventDelay)
+
+	setEventDelay: ->
 		@ontouchstart = ->
-			console.log "ResultScene ontouchstart"
 			@game.popScene()
-			console.log "popped"
+			@game.startGame()
 
 window.onload = ->
 	new Shooter()
