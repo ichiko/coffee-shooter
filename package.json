@@ -1,0 +1,15 @@
+{
+  "name": "shooter",
+  "version": "0.0.0",
+  "description": "enchant.jsとcoffee-scriptで、ゲームをつくってみる。 最初の練習。",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ichiko/coffee-shooter.git"
+  },
+  "author": "ichiko@git.hub",
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-contrib-coffee": "~0.7.0"
+  }
+}

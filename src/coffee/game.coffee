@@ -1,5 +1,6 @@
 # game.coffee
 
+# enchant.js の初期化
 enchant()
 
 # 定数
