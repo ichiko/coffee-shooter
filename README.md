@@ -31,3 +31,10 @@ enchant.jsとcoffee-scriptで、ゲームをつくってみる。
   '''
 
 coffeeファイルを監視して.jsへ変換するGruntfile.coffeeを作成しています。
+以下のコマンドで、監視とビルドを行えます。
+
+'''
+grunt
+'''
+
+
