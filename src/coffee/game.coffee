@@ -177,12 +177,71 @@ class Mush extends Sprite
 
 		while i < len
 			elm = @parentNode.childNodes[i]
-			if elm isnt player and elm isnt this and elm.intersect(this) is true
+			if elm isnt this and elm instanceof Enemy and elm.intersect(this) is true
 				@game.incrementScore(100)
+				@parentNode.addChild new CrushParticle(elm.x, elm.y)
 				@parentNode.removeChild elm
 				@parentNode.removeChild this
 				break
 			i++
+
+class ArcSprite extends Sprite
+	constructor: (radius) ->
+		super radius * 2, radius * 2
+
+		surface = new Surface(radius * 2, radius * 2)
+		c = surface.context
+		# 円を描画
+		c.fillStyle = "rgb(255, 0, 0)"
+		c.beginPath()
+		c.arc(radius, radius, radius, 0, Math.PI * 2, true)
+		c.fill()
+
+		# Sprite にイメージとして指定
+		@image = surface
+
+class CrushParticle extends Group
+	constructor: (x, y) ->
+		super()
+		@x = x
+		@y = y
+
+		# パーティクル生成
+		for i in [0...8]
+			particle = new ArcSprite(5)
+			particle.x = particle.y = 0
+			# 移動ベクトルを保存
+			radius = 2 * Math.PI / 8 * i
+			particle.vx = Math.cos(radius)
+			particle.vy = -Math.sin(radius)
+			# 消滅までの時間
+			particle.life = 20
+
+			# 更新関数を登録
+			particle.update = ->
+				# 移動
+				@x += @vx
+				@y += @vy
+				# ライフに応じて透過度を変更
+				@opacity = @life / 20
+				@life -= 1
+				# true: 存続, false: 消滅
+				return @life > 0
+
+			@addChild particle
+
+	onenterframe: ->
+		# 登録されているパーティクルを更新
+		i = 0
+		len = @childNodes.length
+		while i < len
+			elm = @childNodes[i]
+			if typeof elm isnt "undefined" and elm.update() is false
+				@removeChild elm
+			i++
+		# すべてがなくなったら
+		if @childNodes.length <= 0
+			@parentNode.removeChild this
 
 ## ---- 結果画面 ----
 
