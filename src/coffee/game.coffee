@@ -97,8 +97,9 @@ class ShootScene extends Scene
 			@tick = 0
 
 		@ontouchstart = (e) ->
-			player.x = e.x
-			@mainGroup.addChild new Mush(e.x, MUSH_INIT_POS_Y)
+			player.tl.moveTo(e.x, player.y, Math.abs(player.x - e.x) / 4).then( =>
+				@mainGroup.addChild new Mush(e.x, MUSH_INIT_POS_Y)
+			)
 
 		@onenterframe = ->
 			@tick++
