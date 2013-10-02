@@ -25,9 +25,6 @@ MUSH_INIT_POS_Y = 55
 
 TIME_LIMIT = 10 * FPS
 
-# グローバル変数
-player = null
-
 class Shooter extends Game
 	constructor: ->
 		super SCREEN_SIZE, SCREEN_SIZE
@@ -77,8 +74,8 @@ class ShootScene extends Scene
 		@game = Shooter.game
 		ShootScene.scene = @
 
-		player = new Player(PLAYER_INIT_POS_X, PLAYER_INIT_POS_Y)
-		@addChild player
+		@player = new Player(PLAYER_INIT_POS_X, PLAYER_INIT_POS_Y)
+		@addChild @player
 
 		timeLabel = new StateLabel(160, 18)
 		timeLabel.x = timeLabel.y = 0
@@ -94,10 +91,11 @@ class ShootScene extends Scene
 
 		@onenter = ->
 			@initScene()
+			@player.tl.clear()
 			@tick = 0
 
 		@ontouchstart = (e) ->
-			player.tl.moveTo(e.x, player.y, Math.abs(player.x - e.x) / 4).then( =>
+			@player.tl.moveTo(e.x, @player.y, Math.abs(@player.x - e.x) / 4).then( =>
 				@mainGroup.addChild new Mush(e.x, MUSH_INIT_POS_Y)
 			)
 
@@ -107,7 +105,7 @@ class ShootScene extends Scene
 				@mainGroup.addChild(new Enemy(ENEMY_INIT_POS_X, ENEMY_INIT_POS_TOP + Math.random() * ENEMY_INIT_POS_RANGE))
 
 	initScene: ->
-		player.x = PLAYER_INIT_POS_X
+		@player.x = PLAYER_INIT_POS_X
 		@removeChild @mainGroup if @mainGroup
 		@mainGroup = new Group()
 		@addChild @mainGroup
@@ -277,9 +275,16 @@ class ResultScene extends Scene
 		@tl.delay(@game.fps * 1).then(this.setEventDelay)
 
 	setEventDelay: ->
-		@ontouchstart = ->
-			@game.popScene()
-			@game.startGame()
+		btn = new Button("リトライ!", "blue")
+		btn.moveTo(90, 220)
+		btn.width = 120
+		btn.game = Shooter.game
+		btn.ontouchend = ->
+			@tl.delay(@game.fps * 0.1).then( ->
+				@game.popScene()
+				@game.startGame()
+			)
+		@addChild btn
 
 window.onload = ->
 	new Shooter()
