@@ -17,5 +17,30 @@
 <body>
 <h1>狩りの時間です。</h1>
 <div id="enchant-stage"></div>
+<div id="details">
+	<h2>Info</h2>
+	<p>enchant.jsとcoffee-scriptで、ゲームを作ってみた。</p>
+	<p>
+		enchant.jsでは、Game &gt; Scene &gt; [Group | Sprite] という構造を持って、ゲームが構成されている。
+	</p>
+	<p>
+		いずれも、MVCで構成する場合には、Vに相当すべきなのだが、そこまでうまく使えなかった。
+		点数計算は、Gameが持ってるけど、その指示はSpriteが出してるし、衝突判定をSpriteがやってる。
+	</p>
+	<p>
+		次はもう少し、MVCを意識してコードをすっきりさせたい。
+		MVCフレームワークを使ってみるのも手かな。
+	</p>
+	<p>
+		これらのコードは、<a href="https://github.com/ichiko/coffee-shooter" target="_blank">github.com/ichiko/coffee-shooter</a>で公開している。
+		興味があれば、参照されたし。
+	</p>
+	<p><small>
+		ゲームの開始ボタンあってもよかったな。。。
+	</small></p>
+</div>
+<div id="footer">
+	<p>2013/09/03  ichiko/@ichiko_revjune</p>
+</div>
 </body>
 </html>
