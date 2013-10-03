@@ -1,6 +1,17 @@
 enchant.jsとcoffee-scriptで、ゲームをつくってみる。
 最初の練習。
 
+### DEMO
+
+<http://ichiko.github.io/coffee-shooter/index.html>
+
+#### ざっくりやってみたこと
+
+- きのこ、こうもりが移動する(Sprite.onenterframeで更新)
+- ユーザクリックの位置まで、移動してから、きのこを投げる(Timelineを使った)
+- 打ち落すときにパーティクルを表示する(SpriteをGroupにつめて、まとめて管理)
+- メインと結果を別々のシーンで管理する
+
 ### for Developers
 
 #### 環境に必要なもの。
